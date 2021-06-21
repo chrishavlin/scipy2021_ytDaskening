@@ -1,0 +1,11 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+chapters:
+- file: 00_background
+- file: 01_unytdask
+- file: 02_daskifiedread
+- file: 03_testing
+- file: 99_setup
