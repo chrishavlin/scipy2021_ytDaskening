@@ -1,17 +1,12 @@
-# A Daskified yt 
+# A Daskified yt : reading data
 
 Overview
 
-## particle IO 
-
 ## strategy: improving frontends 
 
-making things more plugin-like 
+code reduction/simplification: describe frontend IO/indexing, how dask can simplify.
 
 ## examples 
 
 show some examples 
 
-## IO with calculations 
-
-yt.quantities
