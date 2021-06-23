@@ -9,6 +9,7 @@ import cProfile
 test_branches = {
         "dask": "dask_unyt_index_refactor" ,  # rename to scipy2021_dask
         "dask_multiproc": "dask_unyt_index_refactor",
+        "dask_mpi": "dask_unyt_index_refactor",
         "main_serial": "master",  # rename to scipy2021_main
         "main_mpi": "master",
         }
