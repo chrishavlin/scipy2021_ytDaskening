@@ -21,7 +21,7 @@ bibtex_bibfiles:
 
 # Information about where the book exists on the web
 repository:
-  url: https://github.com/chrishavlin/scipy2021  # Online location of your book  
+  url: https://github.com/chrishavlin/scipy2021_ytDaskening  # Online location of your book  
 
 # Add GitHub buttons to your book
 # See https://jupyterbook.org/customize/config.html#add-a-link-to-your-repository
