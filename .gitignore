@@ -141,3 +141,7 @@ dmypy.json
 cython_debug/
 
 code/test_config.toml
+.vscode
+code/dask-worker-space/
+.prof
+results/

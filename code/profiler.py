@@ -1,96 +1,54 @@
 from git import Repo
 import toml
-import argparse
+from mpi4py import MPI
 import yt 
 import os
 import pandas as pd
 import cProfile
 
-config = toml.load("test_config.toml")
-repo = Repo.init(config["ytinfo"]["yt_source_dir"])
-
 test_branches = {
-        "dask": "dask_unyt_index_refactor" , 
-        "main": "master"
+        "dask": "dask_unyt_index_refactor" ,  # rename to scipy2021_dask
+        "dask_multiproc": "dask_unyt_index_refactor",
+        "main_serial": "master",  # rename to scipy2021_main
+        "main_mpi": "master",
         }
 
-test_types = {'dask': 'profile_dask.py',
-              'main_serial': 'profile_main.py', 
-              'main_mpi': 'profile_main_mpi.py'}
+test_info = {
+    "iterations": 10
+}
 
-field_to_read = ("PartType0", "Density")
+class ProfileManager(cProfile.Profile):
+    def __init__(self, testtype, configfi="test_config.toml", comm=MPI.COMM_WORLD, *args, **kwargs):
+        """ 
+        a subclass of cProfile.Profile that checks for the proper yt source branch for a 
+        given test type. 
+        """
+        super().__init__(*args, **kwargs)
 
-def load_the_ds():
-    return yt.load_sample("snapshot_033")
+        if testtype not in test_branches.keys():
+            raise ValueError(f"must supply testtype in {list(test_branches.keys())}")
+        self.required_branch = test_branches[testtype]
 
-def profile_selector_read_dask(sel):
-    with cProfile.Profile() as pr:
-        values = sel[field_to_read].compute()
-    return get_df(pr)
+        if comm.rank == 0:
+            # only validate on one process.
+            self.config = toml.load(configfi)
+            self.init_repo()    
+            self.validate_branch()
+        self.mpi_rank = comm.rank
+
+    def init_repo(self):
+        self.repo = Repo.init(self.config["ytinfo"]["yt_source_dir"])
+        org = self.repo.remote()
+        orgurl = list(org.urls)[0]
+
+        if "chrishavlin/yt.git" not in orgurl:
+            raise ValueError("these tests require a clone of github.com/chrishavlin/yt")
     
-def profile_selector_read_main(sel):
-    with cProfile.Profile() as pr:
-        values = sel[field_to_read]
-    return get_df(pr)
+    def validate_branch(self):
+        if self.repo.active_branch.name != self.required_branch :
+            tb = self.required_branch
+            raise ValueError(f"Please checkout the {tb} branch before running this test (re-build should not be necessary)")        
 
-def particle_io_test_ad(ds, dask_run=True):
-    ad = ds.all_data()    
-    if dask_run:
-        return profile_selector_read_dask(ad)
-    else:
-        return profile_selector_read_main(ad)
-
-def particle_dask_io_test_sp(ds, dask_run=True):
-    sp = ds.sphere(ds.domain_center, 0.5)
-    if dask_run:
-        return profile_selector_read_dask(sp)
-    else:
-        return profile_selector_read_main(sp)
-
-def get_df(pr):
-    # returns a dataframe with profiline results 
-    attrs = ['code','callcount','reccallcount','totaltime','inlinetime','calls']
-    rows = []
-    for st in pr.getstats():
-        rows.append([getattr(st,attr) for attr in attrs])
-        
-    return pd.DataFrame(rows,columns=attrs)
-
-def run_all(dask_run=True):
-    ds = load_the_ds()    
-    ad_time = particle_io_test_ad(ds,dask_run=dask_run)
-    sp_time = particle_io_test_sp(ds,dask_run=dask_run)
-    return [ad_time, sp_time]
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description='Run a profiling test')
-    
-    test_type_help = f"select the test type to run. must be one of {list(test_types.keys())}"
-    parser.add_argument('--test_type', type=str, help=f"{test_type_help}")    
-    args = parser.parse_args()
-    
-    test_branch = test_branches[args.test_type]    
-
-    org = repo.remote()
-    orgurl = list(org.urls)[0]
-
-    if "chrishavlin/yt.git" not in orgurl:
-        print("these tests require a clone of github.com/chrishavlin/yt")
-        exit()
-
-    if repo.active_branch.name != test_branch :
-        print(f"Please checkout the {test_branch} branch before running this test (re-build should not be necessary)")
-        exit()
-
-    if "dask" in args.test_type:
-        
-        # spin up dask client 
-        
-        # run the tests
-        results = run_all(dask_run=True)
-        
-    elif "main" in args.test_type:
-        if "mpi" in args.test_type:
-            yt.enable_parallism()
-        results = run_all(dask_run=False)
+    def dump_stats(self, file):
+        fnme = file.replace('.prof',f"_p_{self.mpi_rank}.prof")        
+        super().dump_stats(fnme)
