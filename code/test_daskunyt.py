@@ -20,29 +20,23 @@ def dask_test_op(x):
     end = timer()
     return end - start
 
-def get_array_and_func(args):
+def get_array_and_func(args, sze):
 
     chunk_size = args.chunksize
-    shp = (int(args.array_size),)
-
-    plain_numpy = np.ones(shp)
-    plain_unyt = unyt_array(plain_numpy, 'm')
-    plain_dask = da.ones(shp, chunks=(chunk_size,))
-    unyt_dask = unyt_dask_array.unyt_from_dask(plain_dask, 'm')
-
+    shp = (sze,)
     if args.test_type == 'np':
-        test_array = plain_numpy
+        test_array = np.ones(shp)
         func = plain_test_op
         chunk_size = np.nan
     elif args.test_type == 'unyt':
-        test_array = plain_unyt
+        test_array = unyt_array(np.ones(shp), 'm')
         func = plain_test_op
         chunk_size = np.nan
     elif args.test_type == 'dask':
-        test_array = plain_dask
+        test_array = da.ones(shp, chunks=(chunk_size,))
         func = dask_test_op
     elif args.test_type == 'unyt_dask':
-        test_array = unyt_dask
+        test_array = unyt_dask_array.unyt_from_dask(da.ones(shp, chunks=(chunk_size,)), 'm')
         func = dask_test_op
     return test_array, func, chunk_size
 
@@ -58,13 +52,24 @@ def sanitize_dask_args(args):
     nthr = test_type_to_nan(args.threads_per_worker)
     return ch, nw, nthr
 
+def save_results(test_results, test_sizes, args):
+    # save results
+    df = pd.DataFrame({"elapsed_s": test_results, 'array_size':test_sizes})
+    df['testtype'] = args.test_type
+
+    ch, nw, nthr = sanitize_dask_args(args)
+    df['chunksize'] = ch
+    df['n_workers'] = nw
+    df['threads_per_worker'] = nthr
+    hdr = os.path.isfile(args.out_fi) is False
+    df.to_csv(args.out_fi, mode='a', header= hdr, index=False)
+    
 if __name__ == "__main__":
     # python test_daskunyt.py - -chunksize 1000 - -n_tests 10 - -out_fi hello.csv np 100000
 
     argparse.ArgumentParser
     parser = argparse.ArgumentParser(description='Run a unyt-dask')
     parser.add_argument('test_type', type=str, help="one of np, unyt, dask, unyt_dask")
-    parser.add_argument('array_size', type=int, help='array size')
     parser.add_argument('--chunksize', type=int, default=1e6,
                         help='chunksize for dask arrays')
     parser.add_argument('--n_tests', type=int, default=100)
@@ -82,34 +87,27 @@ if __name__ == "__main__":
         if args.threads_per_worker:
             kwargs["threads_per_worker"] = args.threads_per_worker
         sleep(10) # running this in an external loop, need to make sure the previous async client shutdown has occurred
-        dask_c = Client(threads_per_worker = 2, n_workers = 2)
+        dask_c = Client(**kwargs)
 
-    # setup arrays and the function to call
-    test_array, func, chunk_size = get_array_and_func(args)
-
-    # run the tests
-    test_results = []
+    # run the tests    
+    size_range = np.logspace(6,9,7).astype(int)
+    if 'dask' in args.test_type:
+        size_range = np.concatenate([size_range[:-1], np.logspace(9,10,3).astype(int)])
+    
     for itest in range(args.n_tests):
-        elapsed = func(test_array)
-        test_results.append(elapsed)
+        test_results = []
+        test_sizes = []
+        print(f"    iteration {itest+1} of {args.n_tests}")
+        for test_num, test_size in enumerate(size_range):
+            print(f"        size test {test_num+1} of {len(size_range)}")
+            test_array, func, chunk_size = get_array_and_func(args, test_size)
+            elapsed = func(test_array)
+            test_results.append(elapsed)
+            test_sizes.append(test_size)
+        save_results(test_results, test_sizes, args)
 
-
-
-    # save results
-    df = pd.DataFrame({"elapsed_s": test_results})
-    df['testtype'] = args.test_type
-    df['array_size'] = args.array_size
-
-    ch, nw, nthr = sanitize_dask_args(args)
-    df['chunksize'] = ch
-    df['n_workers'] = nw
-    df['threads_per_worker'] = nthr
-    hdr = os.path.isfile(args.out_fi) is False
-    df.to_csv(args.out_fi, mode='a', header= hdr, index=False)
-
+    # close client if using
     if dask_c:
         dask_c.close()
-        sleep(5)
+        sleep(5) # make sure the async close has time in case we're starting again soon... 
     exit()
-
-
