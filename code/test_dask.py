@@ -1,10 +1,9 @@
 # run with 
-# python test_main.py
-# visualize results with snakeviz/results/testprofile_main
+# python test_dask.py
 import yt
 import os
 from profiler import ProfileManager, test_info
-
+from timeit import default_timer as timer
 
 ds = yt.load_sample("snapshot_033")
 
@@ -25,3 +24,17 @@ for test_iter in range(test_info['iterations']):
 
     saveprof = os.path.join(sdir, f"it_{test_iter}.prof")
     p.dump_stats(saveprof)
+
+
+# raw time measure
+p = ProfileManager(ttype)
+times = []
+for test_iter in range(test_info['iterations']):
+    sp = ds.sphere(ds.domain_center, 0.5)
+
+    t0 = timer()
+    vals = sp[("PartType0", "Density")]
+    t1 = timer()
+    times.append(t1 - t0)
+
+p.save_rawtimes("results", times, "sphere")

@@ -5,6 +5,7 @@ import yt
 import os
 import pandas as pd
 import cProfile
+import numpy as np
 
 test_branches = {
         "dask": "dask_unyt_index_refactor" ,  # rename to scipy2021_dask
@@ -15,17 +16,20 @@ test_branches = {
         }
 
 test_info = {
-    "iterations": 10
+    "iterations": 50
 }
 
 class ProfileManager(cProfile.Profile):
-    def __init__(self, testtype, configfi="test_config.toml", comm=MPI.COMM_WORLD, *args, **kwargs):
+    def __init__(self, testtype, configfi="test_config.toml", nproc=1, nthr=1, comm=MPI.COMM_WORLD, *args, **kwargs):
         """ 
         a subclass of cProfile.Profile that checks for the proper yt source branch for a 
         given test type. 
         """
         super().__init__(*args, **kwargs)
 
+        self.testtype = testtype
+        self.n_workers = nproc
+        self.threads_per_worker = nthr
         if testtype not in test_branches.keys():
             raise ValueError(f"must supply testtype in {list(test_branches.keys())}")
         self.required_branch = test_branches[testtype]
@@ -53,3 +57,18 @@ class ProfileManager(cProfile.Profile):
     def dump_stats(self, file):
         fnme = file.replace('.prof',f"_p_{self.mpi_rank}.prof")        
         super().dump_stats(fnme)
+
+    def save_rawtimes(self, savedir, elapsed_s, selector_string, comm=MPI.COMM_WORLD):
+        df = pd.DataFrame({"elapsed_s": elapsed_s})
+        df['testtype'] = self.testtype
+        df['selector'] = selector_string
+        df['n_workers'] = self.n_workers
+        if 'mpi' in self.testtype:
+            df['MPI_rank'] = comm.rank
+        else:
+            df['MPI_rank'] = np.nan
+        df['threads_per_worker'] = self.threads_per_worker
+
+        savefi = os.path.join(savedir, 'raw_times.csv')
+        hdr = os.path.isfile(savefi) is False
+        df.to_csv(savefi, mode='a', header=hdr, index=False)
