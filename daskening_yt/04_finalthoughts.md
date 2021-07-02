@@ -1,3 +1,3 @@
-# `Dasken(yt)`
+# Dasken(yt)
 
 In the previous sections we've demonstrated a number of daskified components within yt. In general these approaches show promise for reducing yt's code complexity, expanding the distributed computing power outside of an MPI framework and introducing improvements that may be useful beyond yt (i.e., `unyt_dask` arrays). As development continues, we will be further integrating with the yt community: in addition to the existing `unyt_dask` [PR](https://github.com/yt-project/unyt/pull/185), primary development will move to yt's [`daskening` development branch](https://github.com/yt-project/yt/tree/daskening) with an accompanying YTEP, with a target release of yt 5.0 for dask support. If you're interested in Dask development within yt, reach out on [slack](https://yt-project.slack.com/) or via email (chavlin@illinois.edu)!

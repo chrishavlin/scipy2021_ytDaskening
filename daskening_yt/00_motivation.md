@@ -1,4 +1,4 @@
-## Overview
+# Overview
 
 The yt package is a cross-domain tool for visualization and analysis of data. While still used primarily within the computational astrophysics community, a number of recent efforts have focused on transforming yt into a more domain agnostic tool. Part of the effort to expand the yt platform includes leveraging recent advancements from across the open source python ecosystem. This presentation focuses on advancements in using Dask within the yt framework to improve both serial and parallel workflows.
 
@@ -8,6 +8,8 @@ In this presentation, we will show our latest efforts to leverage Dask within th
 
 The poster is divided into a number of sections:
 
-[Daskified unyt arrays](): demonstrating a daskified version of the arrays underlying yt
-[Daskified reads](): a discussion of yt IO and an implementaiton of a daskified particle reader for yt. 
-[Daskified computions](): demonstrating some daskified reductions
+* [Daskified unyt arrays](01_unytdask): demonstrating a daskified version of the arrays underlying yt.
+* [Daskified reads](02_daskifiedread): a discussion of yt IO and an implementaiton of a daskified particle reader for yt. 
+* [Daskified computations](03_daskifiedquantity): demonstrating some daskified reductions.
+* [Dasken(yt)](04_finalthoughts): some final thoughts on further Daskening. 
+* [Repository notes](99_setup): notes on the code used in this poster.

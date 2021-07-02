@@ -4,9 +4,9 @@
 format: jb-book
 root: intro
 chapters:
-- file: 00_motivation
-- file: 01_unytdask
-- file: 02_daskifiedread
-- file: 03_daskifiedquantity
-- file: 04_finalthoughts
-- file: 99_setup
+- file: 00_motivation.md
+- file: 01_unytdask.ipynb
+- file: 02_daskifiedread.ipynb
+- file: 03_daskifiedquantity.md
+- file: 04_finalthoughts.md
+- file: 99_setup.md
