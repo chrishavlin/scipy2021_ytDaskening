@@ -2,7 +2,7 @@
 
 This is the repository contains the jupyter-book source of the Scipy 2021 presentation, "On the Daskening of yt" by Havlin, Munk, Kowalik and Turk. 
 
-Visit the rendered page at [chrishavlin.github.io/scipy2021](chrishavlin.github.io/scipy2021).
+Visit the rendered page at [chrishavlin.github.io/scipy2021](https://chrishavlin.github.io/scipy2021).
 
 ### short summary 
 
