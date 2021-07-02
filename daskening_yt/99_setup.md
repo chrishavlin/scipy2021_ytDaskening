@@ -1,10 +1,10 @@
-# setup
+# Repository notes
 
 The dask functionality for `yt` and `unyt` shown in this poster rely on several branches that are in progress. For reproducibility, the version of the yt branch used for the demonstrating and testing used in this presentation is at [scipy2021_dask](https://github.com/chrishavlin/yt/tree/scipy2021_dask). Additionally the `dask` branch relies on the `unyt` PR [#185](https://github.com/yt-project/unyt/pull/185) branch. 
 
 Both branches must be installed from source to reproduce the notebooks here.
 
-The native yt tests are run using the [scipy2021_main](https://github.com/chrishavlin/yt/tree/scipy2021_main) branch, a frozen copy of the yt development branch from July 1, 2021. 
+The native yt tests are run using the [scipy2021_main](https://github.com/chrishavlin/yt/tree/scipy2021_main) branch, a frozen copy of the yt development branch from July 1, 2021. Switching branches will likely require rebuilding after switching.
 
 ## notes on this presentation
 
