@@ -8,10 +8,10 @@ import cProfile
 import numpy as np
 
 test_branches = {
-        "dask": "dask_unyt_index_refactor" ,  # rename to scipy2021_dask
-        "dask_multiproc": "dask_unyt_index_refactor",
-        "dask_mpi": "dask_unyt_index_refactor",
-        "main_serial": "master",  # rename to scipy2021_main
+        "dask": "dask_quantities" ,  # rename to scipy2021_dask when ready
+        "dask_multiproc": "dask_quantities",
+        "dask_mpi": "dask_quantities",
+        "main_serial": "master",  # rename to scipy2021_main when ready
         "main_mpi": "master",
         }
 
@@ -58,10 +58,14 @@ class ProfileManager(cProfile.Profile):
         fnme = file.replace('.prof',f"_p_{self.mpi_rank}.prof")        
         super().dump_stats(fnme)
 
-    def save_rawtimes(self, savedir, elapsed_s, selector_string, comm=MPI.COMM_WORLD):
+    def save_rawtimes(self, savedir, elapsed_s, selector_string=None, extra_cols=None, comm=MPI.COMM_WORLD):
         df = pd.DataFrame({"elapsed_s": elapsed_s})
         df['testtype'] = self.testtype
-        df['selector'] = selector_string
+        if selector_string:
+            df['selector'] = selector_string
+        if extra_cols:
+            for col, data in extra_cols.items():
+                df[col] = data
         df['n_workers'] = self.n_workers
         if 'mpi' in self.testtype:
             df['MPI_rank'] = comm.rank

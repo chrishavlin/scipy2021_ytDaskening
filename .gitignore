@@ -150,3 +150,4 @@ code/run_tests.sh
 *.idea
 
 daskening_yt/dask-worker-space/
+*.swp
